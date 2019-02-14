@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*
 
 #################### ALESSANDRO RIDOLFI ########################
-#                        Version 1.3                           #
+#                        Version 1.4                           #
 #                 Bonn, Sep 2017 - Feb 2019                    #
 ################################################################
 
@@ -16,15 +16,25 @@ def get_command_output(command):
         out, err = proc.communicate()
         return out
 
+def get_command_output_with_pipe(command1, command2):
+    list_for_Popen_cmd1 = command1.split()
+    list_for_Popen_cmd2 = command2.split()
 
-string_version="1.3 (13Feb19)"
+    p1 = subprocess.Popen(list_for_Popen_cmd1, stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(list_for_Popen_cmd2, stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.                                                                           
+    out, err = p2.communicate()
+    return out
+
+
+string_version="1.4 (14Feb19)"
 flag_GHz = 0
 flag_plotfreq = 0
 flag_log = 0
 refresh_interval_s = 2.0
 ncores = int(get_command_output("nproc"))
 array_freqs = np.zeros((ncores,0))
-
+CPU_model = ""
 
 #ARGOMENTI DA SHELL
 if (("-h" in sys.argv) or ("-help" in sys.argv) or ("--help" in sys.argv)):
@@ -53,6 +63,12 @@ list_colors = ["b", "g", "r", "c", "m", "y", 'k']
 n = 0
 t_s = 0
 array_time_s = np.zeros(0)
+
+if "AMD" in get_command_output_with_pipe("lscpu", "grep name"):
+        CPU_model = "AMD"
+if "Intel" in get_command_output_with_pipe("lscpu", "grep name"):
+        CPU_model = "Intel"
+
 
 if flag_plotfreq == 1:
     fig1 = plt.figure()
@@ -90,9 +106,16 @@ while 1:
 
     array_freqs = np.append(array_freqs, current_freqs, axis=1)
 
+    
     try:
         output_sensors = get_command_output("sensors").strip()
-        cputemp = np.float( output_sensors.split("\n")[-1].split()[1].replace("+","").replace("°C",""))
+        if CPU_model == "AMD":
+                cputemp = np.float( output_sensors.split("\n")[-1].split()[1].replace("+","").replace("°C",""))
+        elif CPU_model == "Intel":
+                list_output_sensors = output_sensors.split("\n")
+                for line in list_output_sensors:
+                        if "Package" in line:
+                                cputemp = np.float( line.split("Package id 0")[-1].split()[1].replace("+","").replace("°C",""))
         CPU_temp_string = "CPU temp: +%d °C" % (cputemp)
     except:
         CPU_temp_string = "WARNING: cannot read CPU temperature"
