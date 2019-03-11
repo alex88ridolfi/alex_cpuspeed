@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*
 
 #################### ALESSANDRO RIDOLFI ########################
-#                        Version 1.4                           #
+#                        Version 1.0                           #
 #                 Bonn, Sep 2017 - Feb 2019                    #
 ################################################################
 
@@ -27,7 +27,7 @@ def get_command_output_with_pipe(command1, command2):
     return out
 
 
-string_version="1.4 (14Feb19)"
+string_version="1.0 (14Feb2019)"
 flag_GHz = 0
 flag_plotfreq = 0
 flag_log = 0
