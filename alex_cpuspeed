@@ -110,12 +110,13 @@ while 1:
     try:
         N_cpus = int(get_command_output_with_pipe("lscpu", "grep Socket").split(":")[-1].strip())
         cputemp_list = []
-
         
         output_sensors = get_command_output("sensors").strip()
         if CPU_model == "AMD":
                 cputemp = np.float( output_sensors.split("\n")[-1].split()[1].replace("+","").replace("°C",""))
                 cputemp_list.append(cputemp)
+                CPU_temp_string = "CPU0 temp: +%d °C" % (cputemp_list[0])
+                
         elif CPU_model == "Intel":
                 list_output_sensors_grep_Package = get_command_output_with_pipe("sensors", "grep Package").split("\n")
                 cputemp_list = []
