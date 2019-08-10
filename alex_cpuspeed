@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*
 
 #################### ALESSANDRO RIDOLFI ########################
-#                        Version 1.0                           #
-#                 Bonn, Sep 2017 - Feb 2019                    #
+#                       Version 1.0.1                          #
+#                Cagliari, Sep 2017 - Feb 2019                 #
 ################################################################
 
 
@@ -27,7 +27,7 @@ def get_command_output_with_pipe(command1, command2):
     return out
 
 
-string_version="1.0 (14Feb2019)"
+string_version="1.0.1 (10Aug2019)"
 flag_GHz = 0
 flag_plotfreq = 0
 flag_log = 0
@@ -108,19 +108,29 @@ while 1:
 
     
     try:
+        N_cpus = int(get_command_output_with_pipe("lscpu", "grep Socket").split(":")[-1].strip())
+        cputemp_list = []
+
+        
         output_sensors = get_command_output("sensors").strip()
         if CPU_model == "AMD":
                 cputemp = np.float( output_sensors.split("\n")[-1].split()[1].replace("+","").replace("°C",""))
+                cputemp_list.append(cputemp)
         elif CPU_model == "Intel":
-                list_output_sensors = output_sensors.split("\n")
-                for line in list_output_sensors:
-                        if "Package" in line:
-                                cputemp = np.float( line.split("Package id 0")[-1].split()[1].replace("+","").replace("°C",""))
-        CPU_temp_string = "CPU temp: +%d °C" % (cputemp)
+                list_output_sensors_grep_Package = get_command_output_with_pipe("sensors", "grep Package").split("\n")
+                cputemp_list = []
+                for j in range(N_cpus):
+                        cputemp_list.append(np.float(list_output_sensors_grep_Package[j].split("+")[1].strip()[:4]))
+
+                CPU_temp_string = "CPU0 temp: +%d °C" % (cputemp_list[0])
+
+                for j in range(1, N_cpus):
+                        CPU_temp_string = "%s | CPU%d temp: +%d °C" % (CPU_temp_string, j, cputemp_list[j])
     except:
         CPU_temp_string = "WARNING: cannot read CPU temperature"
 
 
+        
 
     try:
         gputemp_list = [np.float(x) for x in get_command_output("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader").strip().split("\n")]
@@ -146,9 +156,12 @@ while 1:
 
     if flag_log == 1:
             string_GPU_temps = ""
+            string_CPU_temps = ""
             for i in range(0, N_gpus):
                     string_GPU_temps = "%s %20.0f" % (string_GPU_temps, gputemp_list[i])
-            logfile.write("%20d %20s %20s %20.1f %s\n" % (elapsed_seconds, string_date, string_time, cputemp, string_GPU_temps))
+            for i in range(0, N_cpus):
+                    string_CPU_temps = "%s %20.0f" % (string_CPU_temps, cputemp_list[i])
+            logfile.write("%20d %20s %20s %20.1f %s\n" % (elapsed_seconds, string_date, string_time, string_GPU_temps, string_GPU_temps))
 
 
     if flag_plotfreq == 1:
