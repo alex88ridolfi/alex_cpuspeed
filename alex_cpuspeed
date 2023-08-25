@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*
+#!/usr/bin/env python3
 
 #################### ALESSANDRO RIDOLFI ########################
 #                       Version 1.0.1                          #
@@ -14,20 +13,19 @@ def get_command_output(command):
         list_for_Popen = command.split()
         proc = subprocess.Popen(list_for_Popen, stdout=subprocess.PIPE)
         out, err = proc.communicate()
-        return out
+        return out.decode(sys.stdout.encoding)
 
 def get_command_output_with_pipe(command1, command2):
     list_for_Popen_cmd1 = command1.split()
     list_for_Popen_cmd2 = command2.split()
-
     p1 = subprocess.Popen(list_for_Popen_cmd1, stdout=subprocess.PIPE)
     p2 = subprocess.Popen(list_for_Popen_cmd2, stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.                                                                           
     out, err = p2.communicate()
-    return out
+    return out.decode(sys.stdout.encoding)
 
 
-string_version="1.0.1 (10Aug2019)"
+string_version="1.1 (25Aug2023)"
 flag_GHz = 0
 flag_plotfreq = 0
 flag_log = 0
@@ -38,11 +36,11 @@ CPU_model = ""
 
 #ARGOMENTI DA SHELL
 if (("-h" in sys.argv) or ("-help" in sys.argv) or ("--help" in sys.argv)):
-    print "Usage: alex_cpuspeed [-GHz] [-t SECONDS] [-log <logfilename>]"
-    print
+    print("Usage: alex_cpuspeed [-GHz] [-t SECONDS] [-log <logfilename>]")
+    print()
     exit()
 elif (("-version" in sys.argv) or ("--version" in sys.argv)):
-    print "Version: %s" % (string_version)
+    print("Version: %s" % (string_version))
     exit()
 
 else:
@@ -80,6 +78,7 @@ if flag_plotfreq == 1:
 
 start_time = time.time()
 
+
 while 1:
     time.sleep(refresh_interval_s)
     string_date = datetime.datetime.now().strftime("%Y%m%d")
@@ -106,12 +105,12 @@ while 1:
 
     array_freqs = np.append(array_freqs, current_freqs, axis=1)
 
-    
+
     try:
         N_cpus = int(get_command_output_with_pipe("lscpu", "grep Socket").split(":")[-1].strip())
         cputemp_list = []
-        
         output_sensors = get_command_output("sensors").strip()
+        
         if CPU_model == "AMD":
                 cputemp = np.float( output_sensors.split("\n")[-1].split()[1].replace("+","").replace("°C",""))
                 cputemp_list.append(cputemp)
@@ -135,10 +134,10 @@ while 1:
 
     try:
         gputemp_list = [np.float(x) for x in get_command_output("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader").strip().split("\n")]
-        print gputemp_list
+        print(gputemp_list)
         N_gpus = len(gputemp_list)
         GPU_temp_string = "GPU0 temp: +%d °C" % (gputemp_list[0])
-        print GPU_temp_string
+        print(GPU_temp_string)
         for i in range(1, N_gpus):
                 GPU_temp_string = "%s | GPU%d temp: +%d °C" % (GPU_temp_string, i, gputemp_list[i])
     except:
@@ -148,12 +147,12 @@ while 1:
 
 
     os.system("clear")
-    print "%s  |  %s" % (CPU_temp_string, GPU_temp_string)
+    print("%s  |  %s" % (CPU_temp_string, GPU_temp_string))
     for j in range(core_count):
         if flag_GHz==1:
-            print "Core %2d: %7.2f GHz" % (j, np.float(dict_cores[str(j)])/1000.)
+            print("Core %2d: %7.2f GHz" % (j, np.float(dict_cores[str(j)])/1000.))
         else:
-            print "Core %2d: %7.0f MHz" % (j, dict_cores[str(j)])
+            print("Core %2d: %7.0f MHz" % (j, dict_cores[str(j)]))
 
     if flag_log == 1:
             string_GPU_temps = ""
