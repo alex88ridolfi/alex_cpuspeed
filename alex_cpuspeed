@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 #################### ALESSANDRO RIDOLFI ########################
-#                       Version 1.0.1                          #
-#                Cagliari, Sep 2017 - Feb 2019                 #
+#                        Version 1.1                           #
+#                Cagliari, Sep 2017 - Aug 2023                 #
 ################################################################
 
 
@@ -29,6 +29,7 @@ string_version="1.1 (25Aug2023)"
 flag_GHz = 0
 flag_plotfreq = 0
 flag_log = 0
+log_tag=""
 refresh_interval_s = 2.0
 ncores = int(get_command_output("nproc"))
 array_freqs = np.zeros((ncores,0))
@@ -36,7 +37,7 @@ CPU_model = ""
 
 #ARGOMENTI DA SHELL
 if (("-h" in sys.argv) or ("-help" in sys.argv) or ("--help" in sys.argv)):
-    print("Usage: alex_cpuspeed [-GHz] [-t SECONDS] [-log <logfilename>]")
+    print("Usage: alex_cpuspeed [-GHz] [-t SECONDS] [-log <tag>] [-plotfreq] ")
     print()
     exit()
 elif (("-version" in sys.argv) or ("--version" in sys.argv)):
@@ -54,9 +55,10 @@ else:
             flag_plotfreq = 1
         elif (sys.argv[j] == "-log"):
             flag_log = 1
-            logfile_name = "LOG-alex_cpuspeed_%s.txt" % ( (datetime.datetime.now()).strftime("%Y%m%d_%H%M%S") ) 
-            logfile = open(logfile_name, "w", 0)
-            logfile.write("%20s %20s %20s %20s %20s\n" % ("elapsed_seconds", "date", "time", "CPUtemp(deg)", "GPU(s)temp(deg)" ))
+            log_tag = sys.argv[j+1]
+            logfile_name = "LOG-alex_cpuspeed_%s_%s.txt" % (log_tag, (datetime.datetime.now()).strftime("%Y%m%d_%H%M%S") ) 
+            logfile = open(logfile_name, "w", 1)
+            logfile.write("%20s %20s %20s %20s %20s %20s %20s\n" % ("elapsed_seconds", "date", "time", "CPUtemp(deg)", "GPU(s)temp(deg)", "MaxCPUfreq(MHz)", "AvgCPUfreq(MHz)" ))
 list_colors = ["b", "g", "r", "c", "m", "y", 'k']
 n = 0
 t_s = 0
@@ -154,6 +156,9 @@ while 1:
         else:
             print("Core %2d: %7.0f MHz" % (j, dict_cores[str(j)]))
 
+
+    str_max_frequency_MHz = "%7.0f" % np.amax(current_freqs)
+    str_avg_frequency_MHz = "%7.0f" % np.mean(current_freqs)
     if flag_log == 1:
             string_GPU_temps = ""
             string_CPU_temps = ""
@@ -162,7 +167,7 @@ while 1:
             for i in range(0, N_cpus):
                     string_CPU_temps = "%s %20.0f" % (string_CPU_temps, cputemp_list[i])
                     
-            logfile.write("%20d %20s %20s %20s %s\n" % (elapsed_seconds, string_date, string_time, string_CPU_temps, string_GPU_temps))
+            logfile.write("%20d %20s %20s %20s %s %20s %20s\n" % (elapsed_seconds, string_date, string_time, string_CPU_temps, string_GPU_temps, str_max_frequency_MHz, str_avg_frequency_MHz))
 
 
     if flag_plotfreq == 1:
