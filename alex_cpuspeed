@@ -48,7 +48,7 @@ else:
         if (sys.argv[j] == "-GHz"):
             flag_GHz = 1
         elif (sys.argv[j] == "-t"):
-            refresh_interval_s = np.float(sys.argv[j+1])
+            refresh_interval_s = np.float64(sys.argv[j+1])
         elif (sys.argv[j] == "-plotfreq"):
             import pylab as plt
             flag_plotfreq = 1
@@ -99,7 +99,7 @@ while 1:
             core_num = int(line.split(":")[-1])
             core_count = core_count + 1
         elif line.startswith("cpu MHz"):
-            core_speed = np.float(line.split(":")[-1])
+            core_speed = np.float64(line.split(":")[-1])
             current_freqs[core_num] = core_speed
             dict_cores['%d' % core_num] = core_speed
 
@@ -112,7 +112,7 @@ while 1:
         output_sensors = get_command_output("sensors").strip()
         
         if CPU_model == "AMD":
-                cputemp = np.float( output_sensors.split("\n")[-1].split()[1].replace("+","").replace("°C",""))
+                cputemp = np.float64( output_sensors.split("\n")[-1].split()[1].replace("+","").replace("°C",""))
                 cputemp_list.append(cputemp)
                 CPU_temp_string = "CPU0 temp: +%d °C" % (cputemp_list[0])
                 
@@ -120,7 +120,7 @@ while 1:
                 list_output_sensors_grep_Package = get_command_output_with_pipe("sensors", "grep Package").split("\n")
                 cputemp_list = []
                 for j in range(N_cpus):
-                        cputemp_list.append(np.float(list_output_sensors_grep_Package[j].split("+")[1].strip()[:4]))
+                        cputemp_list.append(np.float64(list_output_sensors_grep_Package[j].split("+")[1].strip()[:4]))
 
                 CPU_temp_string = "CPU0 temp: +%d °C" % (cputemp_list[0])
 
@@ -133,7 +133,7 @@ while 1:
         
 
     try:
-        gputemp_list = [np.float(x) for x in get_command_output("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader").strip().split("\n")]
+        gputemp_list = [np.float64(x) for x in get_command_output("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader").strip().split("\n")]
         print(gputemp_list)
         N_gpus = len(gputemp_list)
         GPU_temp_string = "GPU0 temp: +%d °C" % (gputemp_list[0])
@@ -150,7 +150,7 @@ while 1:
     print("%s  |  %s" % (CPU_temp_string, GPU_temp_string))
     for j in range(core_count):
         if flag_GHz==1:
-            print("Core %2d: %7.2f GHz" % (j, np.float(dict_cores[str(j)])/1000.))
+            print("Core %2d: %7.2f GHz" % (j, np.float64(dict_cores[str(j)])/1000.))
         else:
             print("Core %2d: %7.0f MHz" % (j, dict_cores[str(j)]))
 
