@@ -58,7 +58,7 @@ else:
             log_tag = sys.argv[j+1]
             logfile_name = "LOG-alex_cpuspeed_%s_%s.txt" % (log_tag, (datetime.datetime.now()).strftime("%Y%m%d_%H%M%S") ) 
             logfile = open(logfile_name, "w", 1)
-            logfile.write("%20s %20s %20s %20s %20s %20s %20s\n" % ("elapsed_seconds", "date", "time", "CPUtemp(deg)", "GPU(s)temp(deg)", "MaxCPUfreq(MHz)", "AvgCPUfreq(MHz)" ))
+            logfile.write("%20s %20s %20s %20s %20s %20s %20s %20s\n" % ("elapsed_seconds", "date", "time", "CPUtemp(deg)", "GPU(s)temp(deg)", "GPU(s)utils(%)", "MaxCPUfreq(MHz)", "AvgCPUfreq(MHz)" ))
 list_colors = ["b", "g", "r", "c", "m", "y", 'k']
 n = 0
 t_s = 0
@@ -149,14 +149,17 @@ while 1:
 
         
 
+
     try:
         gputemp_list = [np.float64(x) for x in get_command_output("nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader").strip().split("\n")]
+        gpuutil_list = [x.replace(" ", "") for x in get_command_output("nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader").strip().split("\n")]
         print(gputemp_list)
+        print(gpuutil_list)
         N_gpus = len(gputemp_list)
-        GPU_temp_string = "GPU0 temp: +%d °C" % (gputemp_list[0])
+        GPU_temp_string = "GPU0 temp: +%d°C (%s)" % (gputemp_list[0], gpuutil_list[0])
         print(GPU_temp_string)
         for i in range(1, N_gpus):
-                GPU_temp_string = "%s | GPU%d temp: +%d °C" % (GPU_temp_string, i, gputemp_list[i])
+                GPU_temp_string = "%s | GPU%d temp: +%d°C (%s)" % (GPU_temp_string, i, gputemp_list[i], gpuutil_list[i])
     except:
         GPU_temp_string = "WARNING: cannot read GPU temperature"
         N_gpus = 0
@@ -176,13 +179,16 @@ while 1:
     str_avg_frequency_MHz = "%7.0f" % np.mean(current_freqs)
     if flag_log == 1:
             string_GPU_temps = ""
+            string_GPU_utils = ""
             string_CPU_temps = ""
+
             for i in range(0, N_gpus):
                     string_GPU_temps = "%s %20.0f" % (string_GPU_temps, gputemp_list[i])
+                    string_GPU_utils = "%s %3s" % (string_GPU_utils, gpuutil_list[i].replace("%", ""))
             for i in range(0, N_cpus):
                     string_CPU_temps = "%s %20.0f" % (string_CPU_temps, cputemp_list[i])
                     
-            logfile.write("%20d %20s %20s %20s %s %20s %20s\n" % (elapsed_seconds, string_date, string_time, string_CPU_temps, string_GPU_temps, str_max_frequency_MHz, str_avg_frequency_MHz))
+            logfile.write("%20d %20s %20s %20s %s %s %20s %20s\n" % (elapsed_seconds, string_date, string_time, string_CPU_temps, string_GPU_temps, string_GPU_utils, str_max_frequency_MHz, str_avg_frequency_MHz))
 
 
     if flag_plotfreq == 1:
