@@ -112,9 +112,24 @@ while 1:
         N_cpus = int(get_command_output_with_pipe("lscpu", "grep Socket").split(":")[-1].strip())
         cputemp_list = []
         output_sensors = get_command_output("sensors").strip()
-        
+        list_output_sensors_lines = output_sensors.split("\n")
+        #print("output_sensors = ", output_sensors)
         if CPU_model == "AMD":
-                cputemp = np.float64( output_sensors.split("\n")[-1].split()[1].replace("+","").replace("°C",""))
+                dict_temps = {'Tctl': 0, 'Tccd1': 0, 'Tccd2': 0}
+                for n in range(len(list_output_sensors_lines)):
+                        line = list_output_sensors_lines[n]
+                        if line.startswith('Tctl'):
+                                temp0 = np.float64(line.split(":")[-1].strip().replace("+","").replace("°C",""))
+                                dict_temps['Tctl'] = temp0
+                        elif line.startswith('Tccd1'):
+                                temp1 = np.float64(line.split(":")[-1].strip().replace("+","").replace("°C",""))
+                                dict_temps['Tccd1'] = temp1
+                        elif line.startswith('Tccd2'):
+                                temp2 = np.float64(line.split(":")[-1].strip().replace("+","").replace("°C",""))
+                                dict_temps['Tccd2'] = temp2
+
+                        cputemp = max(dict_temps.values())
+
                 cputemp_list.append(cputemp)
                 CPU_temp_string = "CPU0 temp: +%d °C" % (cputemp_list[0])
                 
